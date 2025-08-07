@@ -1,186 +1,190 @@
 <!DOCTYPE html>
-<html lang="en">
-    <!-- Thêm code ở đây       -->
-    <head>
+<html lang="vi">
+<head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Teachable Machine Image Upload</title>
   <style>
-  body {
-    font-family: Arial, sans-serif;
-    text-align: center;
-    margin-top: 50px;
-    background-color: #f9f9f9;
-  }
- /* adddddd */
-  .image-container {
-  display: flex;
-  justify-content: center;
-  margin-top: 20px;
-}
-#uploaded-image {
-  max-width: 300px;
-  max-height: 300px;
-  object-fit: contain;
-}
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 50px;
+      background-color: #f9f9f9;
+    }
 
-.label-container div {
-  font-size: 18px;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 8px;
-}
+    .image-container {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
 
-/* ssssssssssssssssssssss */
-  input[type="file"] {
-    padding: 10px;
-    margin: 20px 0;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-  }
+    #uploaded-image {
+      max-width: 300px;
+      max-height: 300px;
+      object-fit: contain;
+    }
 
-  img {
-    max-width: 300px;
-    border: 2px solid #333;
-    margin-top: 20px;
-    border-radius: 10px;
-  }
+    .label-container div {
+      font-size: 18px;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 8px;
+    }
 
-  #result {
-    font-size: 18px;
-    margin-top: 20px;
-    color: green;
-    font-weight: bold;
-  }
+    input[type="file"] {
+      position: absolute;
+      opacity: 0;
+      width: 200px;
+      height: 40px;
+      cursor: pointer;
+      z-index: 2;
+    }
 
-  button {
-    padding: 10px 20px;
-    background-color: #333;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-  }
+    .file-upload-wrapper {
+      position: relative;
+      display: inline-block;
+      margin-top: 20px;
+    }
 
-  button:hover {
-    background-color: #555;
-  }
-</style>
-    </head>
-    <!--  -->
-  <body>
-    <div>Teachable Machine Image Model</div>
-<button type="button" onclick="init()">Start</button>
-   <!-- Test thêm code vào  -->
+    #file-label {
+      display: inline-block;
+      padding: 10px 20px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background-color: #fff;
+      color: #333;
+      z-index: 1;
+    }
 
+    img {
+      max-width: 300px;
+      border: 2px solid #333;
+      margin-top: 20px;
+      border-radius: 10px;
+    }
 
-<input type="file" accept="image/*" onchange="handleImageUpload(event)">
-<!-- thêm bao <div> vào đoạn img có sẵn   -->
-<div class="image-container">  
+    #result {
+      font-size: 18px;
+      margin-top: 20px;
+      color: green;
+      font-weight: bold;
+    }
+
+    button {
+      padding: 10px 20px;
+      background-color: #333;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #555;
+    }
+  </style>
+</head>
+<body>
+  <div><h1>Teachable Machine Image Model</h1></div>
+  <div><p>Vui lòng chọn tệp chứa cờ của một quốc gia trong Đông Nam Á</p></div>
+
+  <button type="button" onclick="init()">Start</button>
+
+  <!-- Tùy chỉnh giao diện input file -->
+  <div class="file-upload-wrapper">
+    <input type="file" id="fileInput" accept="image/*" onchange="handleImageUpload(event)">
+    <span id="file-label">Chọn tệp chứa cờ</span>
+  </div>
+
+  <div class="image-container">  
     <img id="uploaded-image" width="200" style="display:none;"/>
-</div>
+  </div>
 
+  <div id="webcam-container"></div>
+  <div id="label-container" class="label-container"></div>
 
-    <!--  -->
-<div id="webcam-container"></div>
-<div id="label-container"></div>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
-<script type="text/javascript">
-    // More API functions here:
-    // https://github.com/googlecreativelab/teachablemachine-community/tree/master/libraries/image
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
 
-    // the link to your model provided by Teachable Machine export panel
+  <script>
     const URL = "https://teachablemachine.withgoogle.com/models/0lDJfV7F7/";
-
     let model, webcam, labelContainer, maxPredictions;
 
-    // Load the image model and setup the webcam
     async function init() {
-        const modelURL = URL + "model.json";
-        const metadataURL = URL + "metadata.json";
+      const modelURL = URL + "model.json";
+      const metadataURL = URL + "metadata.json";
 
-        // load the model and metadata
-        // Refer to tmImage.loadFromFiles() in the API to support files from a file picker
-        // or files from your local hard drive
-        // Note: the pose library adds "tmImage" object to your window (window.tmImage)
-        model = await tmImage.load(modelURL, metadataURL);
-        maxPredictions = model.getTotalClasses();
+      model = await tmImage.load(modelURL, metadataURL);
+      maxPredictions = model.getTotalClasses();
 
-        // Convenience function to setup a webcam
-        const flip = true; // whether to flip the webcam
-        webcam = new tmImage.Webcam(200, 200, flip); // width, height, flip
-        await webcam.setup(); // request access to the webcam
-        await webcam.play();
-        window.requestAnimationFrame(loop);
+      const flip = true;
+      webcam = new tmImage.Webcam(200, 200, flip);
+      await webcam.setup();
+      await webcam.play();
+      window.requestAnimationFrame(loop);
 
-        // append elements to the DOM
-        document.getElementById("webcam-container").appendChild(webcam.canvas);
-        labelContainer = document.getElementById("label-container");
-        for (let i = 0; i < maxPredictions; i++) { // and class labels
-            labelContainer.appendChild(document.createElement("div"));
-        }
+      document.getElementById("webcam-container").appendChild(webcam.canvas);
+      labelContainer = document.getElementById("label-container");
+      for (let i = 0; i < maxPredictions; i++) {
+        labelContainer.appendChild(document.createElement("div"));
+      }
     }
 
     async function loop() {
-        webcam.update(); // update the webcam frame
-        await predict();
-        window.requestAnimationFrame(loop);
+      webcam.update();
+      await predict();
+      window.requestAnimationFrame(loop);
     }
 
-    // run the webcam image through the image model
     async function predict() {
-        // predict can take in an image, video or canvas html element
-        const prediction = await model.predict(webcam.canvas);
-        for (let i = 0; i < maxPredictions; i++) {
-            const classPrediction =
-                prediction[i].className + ": " + prediction[i].probability.toFixed(2);
-            labelContainer.childNodes[i].innerHTML = classPrediction;
-        }
+      const prediction = await model.predict(webcam.canvas);
+      for (let i = 0; i < maxPredictions; i++) {
+        const classPrediction =
+          prediction[i].className + ": " + prediction[i].probability.toFixed(2);
+        labelContainer.childNodes[i].innerHTML = classPrediction;
+      }
     }
-    // Testttttt
-    
-    async function handleImageUpload(event) {
-    const imageElement = document.getElementById("uploaded-image");
-    const file = event.target.files[0];
-    if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = async function(e) {
+    async function handleImageUpload(event) {
+      const imageElement = document.getElementById("uploaded-image");
+      const file = event.target.files[0];
+      const fileLabel = document.getElementById("file-label");
+
+      if (!file) {
+        fileLabel.textContent = "Chọn tệp chứa cờ";
+        return;
+      }
+
+      fileLabel.textContent = file.name;
+
+      const reader = new FileReader();
+      reader.onload = async function(e) {
         imageElement.src = e.target.result;
         imageElement.style.display = "block";
 
         await imageElement.onload;
 
         if (!model) {
-            const modelURL = URL + "model.json";
-            const metadataURL = URL + "metadata.json";
-            model = await tmImage.load(modelURL, metadataURL);
-            maxPredictions = model.getTotalClasses();
-            labelContainer = document.getElementById("label-container");
-            labelContainer.innerHTML = ""; // reset cũ nếu có
-            for (let i = 0; i < maxPredictions; i++) {
-                labelContainer.appendChild(document.createElement("div"));
-            }
+          const modelURL = URL + "model.json";
+          const metadataURL = URL + "metadata.json";
+          model = await tmImage.load(modelURL, metadataURL);
+          maxPredictions = model.getTotalClasses();
+          labelContainer = document.getElementById("label-container");
+          labelContainer.innerHTML = "";
+          for (let i = 0; i < maxPredictions; i++) {
+            labelContainer.appendChild(document.createElement("div"));
+          }
         }
 
         const prediction = await model.predict(imageElement);
         for (let i = 0; i < maxPredictions; i++) {
-            const classPrediction =
-                prediction[i].className + ": " + prediction[i].probability.toFixed(2);
-            labelContainer.childNodes[i].innerHTML = classPrediction;
+          const classPrediction =
+            prediction[i].className + ": " + prediction[i].probability.toFixed(2);
+          labelContainer.childNodes[i].innerHTML = classPrediction;
         }
-    };
-    reader.readAsDataURL(file);
-}
-
-// .................................................................................................
-
-
-
-
-
-</script>
-
-  </body>
+      };
+      reader.readAsDataURL(file);
+    }
+  </script>
+</body>
 </html>
