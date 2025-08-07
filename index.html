@@ -1,8 +1,87 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+    <!-- Thêm code ở đây       -->
+    <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Teachable Machine Image Upload</title>
+  <style>
+  body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin-top: 50px;
+    background-color: #f9f9f9;
+  }
+ /* adddddd */
+  .image-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+#uploaded-image {
+  max-width: 300px;
+  max-height: 300px;
+  object-fit: contain;
+}
+
+.label-container div {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+/* ssssssssssssssssssssss */
+  input[type="file"] {
+    padding: 10px;
+    margin: 20px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+
+  img {
+    max-width: 300px;
+    border: 2px solid #333;
+    margin-top: 20px;
+    border-radius: 10px;
+  }
+
+  #result {
+    font-size: 18px;
+    margin-top: 20px;
+    color: green;
+    font-weight: bold;
+  }
+
+  button {
+    padding: 10px 20px;
+    background-color: #333;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background-color: #555;
+  }
+</style>
+    </head>
+    <!--  -->
   <body>
     <div>Teachable Machine Image Model</div>
 <button type="button" onclick="init()">Start</button>
+   <!-- Test thêm code vào  -->
+
+
+<input type="file" accept="image/*" onchange="handleImageUpload(event)">
+<!-- thêm bao <div> vào đoạn img có sẵn   -->
+<div class="image-container">  
+    <img id="uploaded-image" width="200" style="display:none;"/>
+</div>
+
+
+    <!--  -->
 <div id="webcam-container"></div>
 <div id="label-container"></div>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
@@ -59,6 +138,48 @@
             labelContainer.childNodes[i].innerHTML = classPrediction;
         }
     }
+    // Testttttt
+    
+    async function handleImageUpload(event) {
+    const imageElement = document.getElementById("uploaded-image");
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        imageElement.src = e.target.result;
+        imageElement.style.display = "block";
+
+        await imageElement.onload;
+
+        if (!model) {
+            const modelURL = URL + "model.json";
+            const metadataURL = URL + "metadata.json";
+            model = await tmImage.load(modelURL, metadataURL);
+            maxPredictions = model.getTotalClasses();
+            labelContainer = document.getElementById("label-container");
+            labelContainer.innerHTML = ""; // reset cũ nếu có
+            for (let i = 0; i < maxPredictions; i++) {
+                labelContainer.appendChild(document.createElement("div"));
+            }
+        }
+
+        const prediction = await model.predict(imageElement);
+        for (let i = 0; i < maxPredictions; i++) {
+            const classPrediction =
+                prediction[i].className + ": " + prediction[i].probability.toFixed(2);
+            labelContainer.childNodes[i].innerHTML = classPrediction;
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
+// .................................................................................................
+
+
+
+
+
 </script>
 
   </body>
